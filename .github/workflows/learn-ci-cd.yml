@@ -1,0 +1,69 @@
+name: Build and Push Multi-Component Docker Images # Nama workflow Anda, akan muncul di tab Actions
+
+on:
+  push:
+    branches:
+      - main # Workflow akan berjalan setiap kali ada push ke branch 'main'
+
+env:
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  # PENTING: Ganti 'your_docker_username' dengan USERNAME DOCKER HUB Anda!
+  BACKEND_IMAGE_FULL_NAME: aryzona62/app-backend
+  FRONTEND_IMAGE_FULL_NAME: aryzona62/app-frontend
+
+jobs:
+  build-and-push-backend:
+    runs-on: ubuntu-latest # Jalankan job ini di mesin virtual Ubuntu terbaru yang disediakan GitHub
+
+    steps:
+      - name: Checkout code # Langkah 1: Mengambil kode dari repositori GitHub
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub # Langkah 2: Login ke Docker Hub menggunakan secrets
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Set up Docker Buildx # Langkah 3: Mengatur Docker Buildx (untuk build image yang lebih modern)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Backend Docker image # Langkah 4: Membangun dan mendorong image Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend # Menentukan lokasi Dockerfile untuk Backend (subfolder 'backend')
+          push: true # Perintah untuk mendorong image ke Docker Hub
+          tags: ${{ env.BACKEND_IMAGE_FULL_NAME }}:latest # Tag image dengan 'latest'
+
+      - name: Verify Backend Image on Docker Hub (Optional) # Langkah 5: Pesan konfirmasi
+        run: |
+          echo "Docker image ${{ env.BACKEND_IMAGE_FULL_NAME }}:latest has been pushed to Docker Hub."
+
+  build-and-push-frontend:
+    runs-on: ubuntu-latest
+    needs: build-and-push-backend # Job frontend akan berjalan HANYA setelah job backend selesai dengan sukses
+
+    steps:
+      - name: Checkout code # Langkah 1: Mengambil kode (lagi, karena ini job terpisah)
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub (Frontend) # Langkah 2: Login ke Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Set up Docker Buildx (Frontend) # Langkah 3: Mengatur Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Frontend Docker image # Langkah 4: Membangun dan mendorong image Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend # Menentukan lokasi Dockerfile untuk Frontend (subfolder 'frontend')
+          push: true
+          tags: ${{ env.FRONTEND_IMAGE_FULL_NAME }}:latest
+
+      - name: Verify Frontend Image on Docker Hub (Optional) # Langkah 5: Pesan konfirmasi
+        run: |
+          echo "Docker image ${{ env.FRONTEND_IMAGE_FULL_NAME }}:latest has been pushed to Docker Hub."
