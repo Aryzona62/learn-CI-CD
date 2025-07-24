@@ -1,0 +1,16 @@
+FROM nginx:stable-alpine # Menggunakan image Nginx yang ringan
+
+# Hapus konfigurasi default Nginx
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Salin file konfigurasi Nginx kustom Anda (jika ada, ini opsional)
+# Anda bisa melewatkan ini jika tidak ada konfigurasi kustom
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Salin semua file statis dari folder 'frontend' ke direktori default Nginx
+COPY . /usr/share/nginx/html
+
+EXPOSE 80 # Nginx secara default berjalan di port 80
+
+# Command default Nginx akan berjalan
+CMD ["nginx", "-g", "daemon off;"]
