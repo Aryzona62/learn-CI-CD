@@ -1,0 +1,49 @@
+name: Continuous Deployment to VM # Nama workflow deployment Anda
+
+on:
+  workflow_run: # Workflow ini dipicu setelah workflow lain selesai
+    workflows: ["Build and Push Multi-Component Docker Images"] # Nama workflow CI Anda yang sudah ada
+    types:
+      - completed # Akan dipicu setelah workflow CI selesai (berhasil atau gagal)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # Jalankan job ini di mesin virtual Ubuntu terbaru yang disediakan GitHub
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} # Hanya jalankan jika workflow CI sukses
+
+    steps:
+      - name: Checkout code (optional, for scripts)
+        uses: actions/checkout@v4
+        # Langkah ini mengambil kode repositori ke runner GitHub Actions.
+        # Berguna jika Anda punya script deployment di repo.
+
+      - name: Set VM IP Address # Menentukan IP VM Anda
+        id: set_ip
+        run: |
+          # GANTI DENGAN IP VM UBUNTU VIRTUALBOX ANDA
+          echo "VM_IP=192.168.56.101" >> $GITHUB_OUTPUT
+          # Pastikan ini adalah IP yang Anda gunakan untuk SSH ke VM
+
+      - name: Deploy to VM via SSH # Ini langkah utama deployment
+        uses: appleboy/ssh-action@v1.0.3 # Action untuk menjalankan perintah SSH
+        with:
+          host: ${{ steps.set_ip.outputs.VM_IP }} # IP VM dari langkah sebelumnya
+          username: malvian # Username SSH di VM Anda (biasanya 'ubuntu' untuk Ubuntu Server)
+          key: ${{ secrets.SSH_PRIVATE_KEY_DEPLOY }} # Private key dari GitHub Secrets
+          script: | # Perintah yang akan dijalankan di VM Anda melalui SSH
+            echo "Deploying latest images to VM..."
+            # Navigasi ke folder proyek Docker Compose di VM
+            cd ~/learn-CI-CD
+
+            # Tarik image terbaru untuk backend dan frontend dari Docker Hub
+            docker-compose pull backend
+            docker-compose pull frontend
+
+            # Hentikan dan jalankan ulang kontainer dengan image terbaru
+            # --remove-orphans akan menghapus kontainer lama yang mungkin tidak terdefinisi lagi
+            docker-compose up -d --remove-orphans
+
+            # Opsional: Hapus image lama yang tidak terpakai untuk menghemat ruang
+            # docker image prune -a -f
+
+            echo "Deployment to VM completed."
