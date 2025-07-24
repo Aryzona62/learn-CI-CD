@@ -6,7 +6,7 @@ CORS(app) # Aktifkan CORS untuk semua rute
 
 @app.route('/api/message')
 def get_message():
-    return jsonify(message='Halo dari Backend Docker! (V1)')
+    return jsonify(message='Halo dari Backend Docker! (Deployment Otomatis Berhasil!)')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
