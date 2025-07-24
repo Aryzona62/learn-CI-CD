@@ -32,7 +32,7 @@ jobs:
       - name: Build and push Backend Docker image # Langkah 4: Membangun dan mendorong image Backend
         uses: docker/build-push-action@v5
         with:
-          context: ./backend # Menentukan lokasi Dockerfile untuk Backend (subfolder 'backend')
+          context: ./Backend # Menentukan lokasi Dockerfile untuk Backend (subfolder 'backend')
           push: true # Perintah untuk mendorong image ke Docker Hub
           tags: ${{ env.BACKEND_IMAGE_FULL_NAME }}:latest # Tag image dengan 'latest'
 
