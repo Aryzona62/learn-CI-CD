@@ -60,7 +60,7 @@ jobs:
       - name: Build and push Frontend Docker image # Langkah 4: Membangun dan mendorong image Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend # Menentukan lokasi Dockerfile untuk Frontend (subfolder 'frontend')
+          context: ./Frontend # Menentukan lokasi Dockerfile untuk Frontend (subfolder 'frontend')
           push: true
           tags: ${{ env.FRONTEND_IMAGE_FULL_NAME }}:latest
 
